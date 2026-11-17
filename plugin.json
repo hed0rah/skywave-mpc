@@ -1,0 +1,14 @@
+{
+  "name": "Skywave",
+  "manufacturer": "databurn",
+  "version": "0.6.0",
+  "format": "vst2",
+  "kind": "instrument",
+  "uid": "dbSk",
+  "numInputs": 0,
+  "numOutputs": 2,
+  "category": "Synth",
+  "file32": "VST/skywave-arm32.so",
+  "file64": "VST/skywave-arm64.so",
+  "description": "Shortwave radio for sampling: browse about 700 public KiwiSDR receivers around the world, tune 0 to 30 MHz, and GRAB the last seconds you heard as a WAV on the drive. Needs a network connection."
+}
