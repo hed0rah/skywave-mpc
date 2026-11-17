@@ -1,7 +1,7 @@
 {
   "name": "Skywave",
   "manufacturer": "databurn",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "format": "vst2",
   "kind": "instrument",
   "uid": "dbSk",

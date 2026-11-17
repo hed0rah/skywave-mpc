@@ -461,7 +461,9 @@ def page_reading(c, pno, ptotal):
     y = bm.note_box(c, M, y - 6, CW, "THE WATERFALL IS BORROWED", (
         "Most receivers have three waterfalls for eight listeners. Skywave opens one only while the scope is in use: "
         "turning SPAN, SCALE, SEEK or LABEL, tapping a bar, a Live sweep, or fetching the receiver's labels for LIST "
-        "or DIG; until then PEAK reads 'turn SPAN to start the scope', and the first rows take a few seconds. SEEK "
+        "or DIG; until then PEAK reads 'turn SPAN to start the scope', and the first rows take a few seconds. If the "
+        "receiver's waterfalls are all in use, PEAK reads 'no waterfall slot: try later'; it asks again after a "
+        "minute, or after 15 s if you turn SPAN. SEEK "
         "just after a Live sweep steps through the sweep and leaves the waterfall closed. "
         f"After {SCOPE_IDLE} minutes without any of these it stops sending, parked as a browser's waterfall turned "
         "off (closing it would end the audio too), and it closes with the audio when Listen goes off or the receiver "
@@ -771,7 +773,7 @@ def verify_claims():
     assert [names[h] for h in STEP_HZ] == STEPS
     assert BY["Step"]["display"] == "1 kHz", "the default step"
     assert (step_tune(9652.3, 5000, 1), step_tune(9655.0, 5000, 1), step_tune(9652.3, 5000, -1)) == (9655.0, 9660.0, 9650.0)
-    assert "turns = c / (32.0 * step)" in SRC, "a turn every 32 steps"
+    assert "tuneTurns_ += (c - tuneKnobKHz_) / (32.0 * step);" in SRC, "a turn every 32 steps"
     assert "turn = 2 * math.pi * v" in MAKE_SKIN, "the knob turns clockwise as the frequency rises"
     assert "29999.99" in SRC and "it hears only" in SRC and "fine\", \"Fine\", -1.0f, 1.0f" in SRC
     assert CW_PITCH == 0.5
@@ -782,6 +784,8 @@ def verify_claims():
     assert SEEK_DB == 15 and BAR_DB == 8 and LAMP_DB == 10
     assert len(SPANS) == 10 and SPANS[0] == "2 kHz" and SPANS[-1] == "938 kHz" and SPAN_DEFAULT == "59 kHz"
     assert SCOPE_IDLE == 5 and "some stop at 11, 15 kHz" in SRC
+    assert "kWfAskAgain = std::chrono::seconds(15)" in SRC and SRC.count("wfRetryAt_ = now + seconds(60);") == 2
+    assert 'kNoSlot = "no waterfall slot: try later"' in SRC
     assert "Most receivers have three waterfalls for eight" in SRC and "15000.17 kHz" in README
     # clean
     assert MODES == ["AM", "LSB", "USB", "CW", "NBFM"] and PASS[0][1] == (-4900, 4900)

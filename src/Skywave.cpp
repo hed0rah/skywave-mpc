@@ -287,7 +287,7 @@ public:
         i.name = "Skywave";
         i.vendor = "databurn";
         i.uniqueId = MPC_FOURCC('d', 'b', 'S', 'k');   // == "uid" in plugin.json
-        i.version = 601;   // 0.6.1
+        i.version = 602;   // 0.6.2
         i.isInstrument = true;
         i.numInputs = 0;
         i.numOutputs = 2;
@@ -579,6 +579,7 @@ private:
     static constexpr auto kSessionEnded = seconds(30);   // on air this long and dropped: the receiver ended it
     static constexpr auto kIdle = std::chrono::minutes(30);
     static constexpr auto kScopeIdle = std::chrono::minutes(5);
+    static constexpr auto kWfAskAgain = std::chrono::seconds(15);   // a refused waterfall, asked again on a turn
 
     static float dbToGain(float db) { return std::pow(10.0f, db / 20.0f); }
     static double dialKHz(int mhz, float khz, float fine) { return mhz * 1000.0 + khz + fine; }
@@ -851,6 +852,7 @@ private:
     void wantScope(Clock::time_point now)
     {
         scopeUntil_ = now + kScopeIdle;
+        wfRetryAt_ = std::min(wfRetryAt_, wfRefusedAt_ + kWfAskAgain);   // a hand on the scope asks again sooner
         if (surveyOn_) surveyWas_ = scopeUntil_;             // still wanted once the sweep is done
     }
 
@@ -902,7 +904,7 @@ private:
             if (get(kBin0 + b) != 0.0f) { set(kBin0 + b, 0.0f); notifyHostParameterChanged(kBin0 + b); }
         }
         clearWaterfall();
-        setPeak(kScopeHint);
+        setPeak(noWf_.load() ? kNoSlot : kScopeHint);
     }
 
     // the waterfall's history forgotten, its cells dark
@@ -916,6 +918,7 @@ private:
     }
 
     static constexpr const char* kScopeHint = "turn SPAN to start the scope";
+    static constexpr const char* kNoSlot = "no waterfall slot: try later";   // the receiver's waterfalls are all in use
 
     // the Peak read-out's text; its value flips so the host asks for the text again
     void setPeak(const std::string& text)
@@ -940,7 +943,9 @@ private:
             else
             {
                 wfRetryAt_ = now + seconds(60);
+                wfRefusedAt_ = now;
                 noWf_.store(true);
+                setPeak(kNoSlot);
                 setStatus(surveyOn_ ? "no waterfall slot: try another" : "no waterfall slot: scope off");
                 if (surveyOn_) abortSurvey();
             }
@@ -960,6 +965,7 @@ private:
                 // refused before it began: no slot; ended later: the receiver's doing. Either way, wait
                 if (!wfReady_) { wfRetryAt_ = now + seconds(60); noWf_.store(true); setStatus(surveyOn_ ? "no waterfall slot: try another" : "no waterfall slot: scope off"); }
                 else wfRetryAt_ = now + seconds(30);
+                wfRefusedAt_ = now;
                 closeScope();
                 return;
             }
@@ -2307,6 +2313,7 @@ private:
         }
         wfRetryAt_ = Clock::now();
         noWf_.store(false);
+        setPeak(kScopeHint);
         adpcm_.reset();
         chain_.reset();
         tunedKHz_ = -1.0;
@@ -2864,7 +2871,7 @@ private:
     std::array<std::array<uint8_t, kWfCols>, kWfRows> wfHist_{};   // the waterfall's shades, the newest row first
     std::array<int, kWfCols> wfSlice_{};                   // the loudest of each column since the last row; -1 none
     double wfHistSpan_ = 0.0, wfHistStart_ = 0.0;          // where the history was drawn
-    Clock::time_point lastWfKeepalive_{}, scopeUntil_{}, wfRetryAt_{}, lastBins_{}, lastWfPush_{}, lastRow_{};
+    Clock::time_point lastWfKeepalive_{}, scopeUntil_{}, wfRetryAt_{}, wfRefusedAt_{}, lastBins_{}, lastWfPush_{}, lastRow_{};
     int pendingSeek_ = 0;
     bool pendingLabel_ = false;
     Clock::time_point pendingUntil_{};
