@@ -97,8 +97,10 @@ new Span. The amber line is the dial, the two white lines the passband, what you
 - Label: the receiver's own list of stations, with each one's name and mode; turning it tunes to
   each in turn.
 
-The waterfall is opened when you turn Span, Seek or Label or tap a bar, for a Live sweep, and to
-fetch the receiver's labels when LIST or DIG needs them. After five minutes without any of these
+The waterfall is opened when you turn Span, Scale, Seek or Label or tap a bar, for a Live sweep, and
+to fetch the receiver's labels when LIST or DIG needs them; until then PEAK reads `turn SPAN to start
+the scope`, and the first rows take a few seconds. Seek just after a Live sweep steps through the
+sweep and leaves the waterfall closed. After five minutes without any of these
 it stops sending (the Kiwi ends the audio too if its waterfall is closed, so it is parked, as a
 browser's waterfall turned off), and it closes with the audio when Listen goes off or the receiver
 changes.

@@ -127,7 +127,7 @@ namespace net
 {
 
 // how skywave introduces itself to list servers and receivers, so an owner can tell what it is
-constexpr const char* kAgent = "skywave-mpc/0.6.0 (KiwiSDR client for the Akai MPC; +https://databurn.org/mpc/)";
+constexpr const char* kAgent = "skywave-mpc/0.6.1 (KiwiSDR client for the Akai MPC; +https://databurn.org/mpc/)";
 
 class Conn
 {

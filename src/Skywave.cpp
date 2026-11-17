@@ -287,7 +287,7 @@ public:
         i.name = "Skywave";
         i.vendor = "databurn";
         i.uniqueId = MPC_FOURCC('d', 'b', 'S', 'k');   // == "uid" in plugin.json
-        i.version = 600;   // 0.6.0
+        i.version = 601;   // 0.6.1
         i.isInstrument = true;
         i.numInputs = 0;
         i.numOutputs = 2;
@@ -622,7 +622,7 @@ private:
     }
 
     // ----- what the user does, seen on the audio thread -----------------------------------------
-    // A turn of Station, Category, Label, Seek, Span or Grab is an edge. They are found here, not on the
+    // A turn of Station, Category, Label, Seek, Span, Scale or Grab is an edge. They are found here, not on the
     // worker, because after a project load the framework runs reset() before the next block: the
     // worker would take a restored value for a turn of the knob. The worker acts on the counts.
     void seedEdges()
@@ -634,6 +634,7 @@ private:
         pSeekDown_ = getInt(kSeekDown);
         pGrab_ = getInt(kGrab);
         pSpan_ = getInt(kSpan);
+        pScale_ = getInt(kScale);
         pPageUp_ = getInt(kPageUp);
         pPageDown_ = getInt(kPageDown);
         pBack_ = getInt(kBack);
@@ -654,6 +655,7 @@ private:
         edge(getInt(kSeekUp), pSeekUp_, evSeekUp_);
         edge(getInt(kSeekDown), pSeekDown_, evSeekDown_);
         edge(getInt(kSpan), pSpan_, evSpan_);
+        edge(getInt(kScale), pScale_, evSpan_);     // Scale, like Span, is the scope in use
         edge(getInt(kPageUp), pPageUp_, evPageUp_);
         edge(getInt(kPageDown), pPageDown_, evPageDown_);
         edge(getInt(kBack), pBack_, evBack_);
@@ -900,7 +902,7 @@ private:
             if (get(kBin0 + b) != 0.0f) { set(kBin0 + b, 0.0f); notifyHostParameterChanged(kBin0 + b); }
         }
         clearWaterfall();
-        setPeak("");
+        setPeak(kScopeHint);
     }
 
     // the waterfall's history forgotten, its cells dark
@@ -912,6 +914,8 @@ private:
         for (int k = 0; k < kWfRows * kWfCols; ++k)
             if (get(kWf0 + k) != 0.0f) { set(kWf0 + k, 0.0f); notifyHostParameterChanged(kWf0 + k); }
     }
+
+    static constexpr const char* kScopeHint = "turn SPAN to start the scope";
 
     // the Peak read-out's text; its value flips so the host asks for the text again
     void setPeak(const std::string& text)
@@ -1135,6 +1139,7 @@ private:
         }
         const int k = (int)std::lround((rowStartKHz_ - wfHistStart_) / (rowSpanKHz_ / kWfCols));
         if (k == 0) return;
+        if (std::abs(k) >= kWfCols) autoTop_ = 0.0;         // a jump past the whole view: a new place
         wfHistStart_ += k * rowSpanKHz_ / kWfCols;
         auto shift = [k](auto& a, auto blank) {
             const auto was = a;
@@ -2442,9 +2447,13 @@ private:
         const double c = dialKHz(getInt(kMHz), get(kKHz), get(kFine)), half = 0.5 * spanKHz(viewZoom());
         put(kScopeLo, std::clamp((c - half) / 30000.0, 0.0, 1.0), 1e-6);   // their text is the edge frequency
         put(kScopeHi, std::clamp((c + half) / 30000.0, 0.0, 1.0), 1e-6);
-        // Tune's knob: a turn for 32 steps
-        const double step = kStepHz[std::clamp(getInt(kStep), 0, kNumSteps - 1)] / 1000.0, turns = c / (32.0 * step);
-        put(kTunePos, turns - std::floor(turns), 1e-3);
+        // Tune's knob turns with the frequency, a turn for 32 of the current Step: a new Step leaves it where it is
+        const double step = kStepHz[std::clamp(getInt(kStep), 0, kNumSteps - 1)] / 1000.0;
+        if (tuneKnobKHz_ < 0.0) tuneKnobKHz_ = c;
+        tuneTurns_ += (c - tuneKnobKHz_) / (32.0 * step);
+        tuneTurns_ -= std::floor(tuneTurns_);
+        tuneKnobKHz_ = c;
+        put(kTunePos, tuneTurns_, 1e-3);
         int lo, hi;
         passband(lo, hi);
         // the passband's edges over the scope, as shares of its width round the dial (CW listens under it)
@@ -2830,7 +2839,7 @@ private:
     bool barPending_ = false;                              // a bar seen moved, waiting out a load's reset()
     Clock::time_point barSince_{};
     int lastStation_ = 0;                                // the worker's: where the Station dial was
-    int pStation_ = 0, pCategory_ = 0, pLabel_ = 0, pSeekUp_ = 0, pSeekDown_ = 0, pGrab_ = 0, pSpan_ = 0;
+    int pStation_ = 0, pCategory_ = 0, pLabel_ = 0, pSeekUp_ = 0, pSeekDown_ = 0, pGrab_ = 0, pSpan_ = 0, pScale_ = 0;
     int pPageUp_ = 0, pPageDown_ = 0, pBack_ = 0, pDig_ = 0, pRow_[kRows] = {};
     int playGen_ = -1;
     bool primed_ = false;
@@ -2851,6 +2860,7 @@ private:
     int sliceDb_[kBins] = {};                              // this row's bars, dB over the floor
     double barDb_[kBins] = {};                             // as shown: up at once, down 4 dB a tenth
     double autoTop_ = 20.0;                                // Scale Auto's top, dB over the floor
+    double tuneKnobKHz_ = -1.0, tuneTurns_ = 0.0;           // Tune's knob: where it last turned, its angle
     std::array<std::array<uint8_t, kWfCols>, kWfRows> wfHist_{};   // the waterfall's shades, the newest row first
     std::array<int, kWfCols> wfSlice_{};                   // the loudest of each column since the last row; -1 none
     double wfHistSpan_ = 0.0, wfHistStart_ = 0.0;          // where the history was drawn
@@ -2934,7 +2944,7 @@ private:
     std::mutex listMu_, textMu_;
     std::vector<kiwi::Receiver> list_;
     std::vector<int> byRegion_[kiwi::kNumRegions];
-    std::string peakText_, status_;
+    std::string peakText_ = kScopeHint, status_;
 };
 
 MPC_PLUGIN_ENTRY(Skywave)

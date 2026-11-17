@@ -460,7 +460,9 @@ def page_reading(c, pno, ptotal):
         "the edge labels under the scope show the real edges."), CW, leading=12.5)
     y = bm.note_box(c, M, y - 6, CW, "THE WATERFALL IS BORROWED", (
         "Most receivers have three waterfalls for eight listeners. Skywave opens one only while the scope is in use: "
-        "turning SPAN, SEEK or LABEL, tapping a bar, a Live sweep, or fetching the receiver's labels for LIST or DIG. "
+        "turning SPAN, SCALE, SEEK or LABEL, tapping a bar, a Live sweep, or fetching the receiver's labels for LIST "
+        "or DIG; until then PEAK reads 'turn SPAN to start the scope', and the first rows take a few seconds. SEEK "
+        "just after a Live sweep steps through the sweep and leaves the waterfall closed. "
         f"After {SCOPE_IDLE} minutes without any of these it stops sending, parked as a browser's waterfall turned "
         "off (closing it would end the audio too), and it closes with the audio when Listen goes off or the receiver "
         "changes."), accent=bm.TEXT)
