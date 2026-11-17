@@ -293,14 +293,12 @@ def page_cover(c, pno, ptotal):
     c.setFillColor(bm.ACCENT)
     c.rect(M, wm_y - 12, wm_w, 3, stroke=0, fill=1)
     cat_y = wm_y - 34
-    bm.tracked_string(c, M, cat_y, "SHORTWAVE RADIO FOR SAMPLING, FOR THE MPC", "Mono-Bold", 10, 1.4, bm.TEXT)
+    bm.tracked_string(c, M, cat_y, "SDR PLUGIN FOR THE AKAI MPC", "Mono-Bold", 10, 1.4, bm.TEXT)
     model_y = cat_y - 20
     c.setFont("Serif-Italic", 12)
     c.drawString(M, model_y, "Model of 2026")
-    feat = (f"{len(RX)} public KiwiSDR receivers in {len(REGIONS) - 1} regions of the world · 0 to 30 MHz, tuned in steps of "
-            f"{STEPS[0]} to {STEPS[-1]} · {len(ST)} presets in {len(CATS)} categories named for how they sound · a Live "
-            f"sweep of what the receiver hears now, its strongest {LIVE_MAX} signals · a scope of {BINS} bars over a "
-            "waterfall · GRAB: the last seconds or bars you heard, as a WAV, ready for the sampler")
+    feat = (f"{len(RX)} public KiwiSDR receivers · 0 to 30 MHz · {len(ST)} presets in {len(CATS)} categories · "
+            f"a Live list of what the receiver hears now · a {BINS}-bar scope and waterfall · GRAB saves what you heard as a WAV")
     lines = bm.wrap_text(feat, "Serif-Italic", 10, CW - 24)
     ft, fl = model_y - 24, 14.5
     c.setStrokeColor(bm.TEXT)
@@ -346,10 +344,10 @@ def page_what(c, pno, ptotal):
     tb = bm.draw_tab(c, ["WHAT IT IS"])
     y = tb - 30
     y = bm.para(c, M, y, (
-        "Skywave is an instrument for the Akai MPC that plays a shortwave radio somewhere else in the world. A KiwiSDR "
-        "is a software-defined radio (a receiver whose tuning and demodulation happen in software) that covers 10 kHz to "
-        "30 MHz and that its owner shares on the internet. Skywave calls one of the public ones, tunes it, cleans what "
-        f"it sends and plays it on its track. GRAB writes the last seconds you heard as a WAV on the drive. The list "
+        "Skywave is an SDR plugin for the Akai MPC. It plays live radio from public KiwiSDR receivers over the "
+        "internet. A KiwiSDR is a software-defined radio (tuning and demodulation happen in software) that covers 10 kHz "
+        "to 30 MHz; its owner shares it online. Skywave connects to one, tunes it, cleans the audio and plays it on its "
+        f"track. GRAB saves the last seconds you heard as a WAV on the drive. The list "
         f"shipped with this build holds {len(RX)} receivers (list of {LIST_DATE}); the plugin fetches a fresh one at "
         "most once a day."), CW, leading=13.0)
     y = fig_head(c, y, "THE CHAIN")

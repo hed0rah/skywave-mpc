@@ -1,8 +1,7 @@
 # Skywave
 
-Shortwave radio for sampling, by databurn. An instrument for the Akai MPC that plays any public
-KiwiSDR receiver, 0 to 30 MHz, about 700 of them around the world, and GRAB writes the last
-seconds you heard as a WAV on the drive, ready for the sampler.
+An SDR plugin for the Akai MPC, by databurn. It plays live radio from about 700 public KiwiSDR
+receivers (0 to 30 MHz), and GRAB saves the last seconds you heard as a WAV on the drive.
 
 ## Requirements and install
 

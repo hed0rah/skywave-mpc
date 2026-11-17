@@ -10,5 +10,5 @@
   "category": "Synth",
   "file32": "VST/skywave-arm32.so",
   "file64": "VST/skywave-arm64.so",
-  "description": "Shortwave radio for sampling: browse about 700 public KiwiSDR receivers around the world, tune 0 to 30 MHz, and GRAB the last seconds you heard as a WAV on the drive. Needs a network connection."
+  "description": "SDR plugin: plays live radio from about 700 public KiwiSDR receivers, 0 to 30 MHz, and GRAB saves the last seconds you heard as a WAV on the drive. Needs a network connection."
 }
